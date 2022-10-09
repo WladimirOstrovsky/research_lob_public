@@ -1,11 +1,10 @@
 """
 Loops through orderbook simulations, calculating and storing statistics. Used for 1 test run.
 """
-import sys
-sys.path.append('/home/ubuntu/work/research_orderbook/')
+
 import analyzer as a
 import plots as pl
-from june_2022b import main_orderbook_w_MM_0 as mo
+import main_orderbook as mo
 import pickle
 import time
 import numpy as np
@@ -17,29 +16,21 @@ import statsmodels.tsa.stattools as ts
 import plotly.io as pio
 import warnings
 import copy
-import sys
 import os
-from utils.tee_class import Tee
-from ObjectStoreClass import ObjectStore
+
 
 pio.renderers.default = "browser"
 warnings.filterwarnings("ignore")
 
 PATH = 'C:/Users/WOstr/PycharmProjects/data/research_orderbook/june_2022b/'
 
-# https://stackoverflow.com/questions/2513479/redirect-prints-to-log-file
-# log_file = open(PATH + 'logs/prints_' +
-#                 datetime.now().strftime('%Y%m%d%H%M%S%f') + '.log', 'w')
-# original = sys.stdout
-# sys.stdout = Tee(sys.stdout, log_file)
 
-
-def run_single(name, i, LOCAL=True, **params):
+def run_single(name, i, local_path, **params):
     """
     Runs single simulation and stores in locally.
     :param name: string
     :param i: int
-    :param LOCAL: boolean
+    :param local_path: boolean
     :param params: dict
     :return: None
     """
@@ -88,23 +79,19 @@ def run_single(name, i, LOCAL=True, **params):
     }
 
     # s = time.time()
-    if LOCAL:
-        pickle.dump(dict_temp, open(PATH + 'results_temp/' + name + '_' + str(i) + '.p', 'wb'))
-
-    else:
-        raise Exception('AWS storage not configured')
+    pickle.dump(dict_temp, open(local_path + 'results_temp/' + name + '_' + str(i) + '.p', 'wb'))
 
     print('Execution time (run={}): {}'.format(i, time.time() - start))
 
     return None
 
 
-def run(name=None, runs=1, LOCAL=True, **params):
+def run(name=None, runs=1, local_path=None, **params):
     """
     Loops through iterations and triggers single run.
     :param name:
     :param runs:
-    :param LOCAL:
+    :param local_path:
     :param params:
     :return: None
     """
@@ -112,19 +99,19 @@ def run(name=None, runs=1, LOCAL=True, **params):
     start = time.time()
 
     for i in range(0, runs):
-        run_single(name, i, LOCAL=LOCAL, **params)
+        run_single(name, i, local_path=local_path, **params)
 
     print('Total execution time (runs): {}'.format(time.time() - start))
 
     return None
 
 
-def run_stats(name=None, runs=1, LOCAL=True, **params):
+def run_stats(name=None, runs=1, local_path=None, **params):
     """
     Calculate statistics iteratively to avoid loading all data in memory - loads single simulation at a time.
     :param name: string
     :param runs: int
-    :param LOCAL: boolean
+    :param local_path: string
     :param params: dict
     :return: None
     """
@@ -132,13 +119,10 @@ def run_stats(name=None, runs=1, LOCAL=True, **params):
 
     for i in range(0, runs):
         # load pickles and re-create dict
-        if LOCAL:
-            pickles = pickle.load(open(PATH + 'results_temp/' + name + '_' + str(i) + '.p', 'rb'))
+        pickles = pickle.load(open(local_path + 'results_temp/' + name + '_' + str(i) + '.p', 'rb'))
 
-            # delete pickled files
-            os.remove(PATH + 'results_temp/' + name + '_' + str(i) + '.p')
-        else:
-            raise Exception('AWS not configured')
+        # delete pickled files
+        os.remove(local_path + 'results_temp/' + name + '_' + str(i) + '.p')
 
         if i == 0:
             # unpack some attributes that are same across simulations
@@ -396,7 +380,7 @@ def run_stats(name=None, runs=1, LOCAL=True, **params):
     # fig_price.write_image('C:/Users/WOstr/PycharmProjects/research_abm/abm_simulation/LOB/storage/'
     #                       + name + '_price' + '.jpeg', width=1980, height=1080)
 
-    fig_price_all = pl.plot_price_all_2(price_all, title='price series - ' + str(params['dict_sim']), show=True)
+    fig_price_all = pl.plot_price_all_2(price_all, title='price series - ' + str(params['dict_sim']), show=False)
     # fig_price_all.write_image('C:/Users/WOstr/PycharmProjects/research_abm/abm_simulation/LOB/storage/'
     #                           + name + '_price_all' + '.jpeg', width=1980, height=1080)
 
@@ -457,13 +441,7 @@ def run_stats(name=None, runs=1, LOCAL=True, **params):
     print(stats_dict['stats_shares'])
     print(stats_dict['stats_wealth'])
 
-    if LOCAL:
-        pickle.dump(stats_dict, open(PATH + 'results/' + name + '.p', 'wb'))
-
-        # delete pickled files
-        # os.remove(PATH + 'results_temp/' + name + '_' + str(i) + '.p')
-    else:
-        raise Exception('Not configured')
+    pickle.dump(stats_dict, open(local_path + 'results/' + name + '.p', 'wb'))
 
     print('')
     print(name + ' completed successfully.')
@@ -472,18 +450,19 @@ def run_stats(name=None, runs=1, LOCAL=True, **params):
     return None
 
 
-def run_stats_all(name=None, runs=1, **params):
+def run_stats_all(name=None, runs=1, local_path=None, **params):
     """
     Calculate stats for all simulations - loads all simulations in the memory.
     :param name: string
     :param runs: int
+    :param local_path: string
     :param params: dict
     :return: None
     """
     start = time.time()
 
     # load pickles and re-create dict
-    pickles = reduce(a.merge, [pickle.load(open(PATH + 'results_temp/' + name + '_' + str(i) + '.p', 'rb'))
+    pickles = reduce(a.merge, [pickle.load(open(local_path + 'results_temp/' + name + '_' + str(i) + '.p', 'rb'))
                                     for i in range(0, runs)])
 
     # delete pickled files
@@ -668,7 +647,7 @@ def run_stats_all(name=None, runs=1, **params):
         'stats_wealth': stats_wealth,
     }
 
-    pickle.dump(stats_dict, open(PATH + 'results/' + name + '.p', 'wb'))
+    pickle.dump(stats_dict, open(local_path + 'results/' + name + '.p', 'wb'))
 
     print('')
     print(name + ' completed successfully.')
@@ -678,17 +657,9 @@ def run_stats_all(name=None, runs=1, **params):
 
 
 if __name__ == '__main__':
-    from june_2022b.configs import sensitivity_00
+    from configs import sensitivity_00
 
     s_class = sensitivity_00.S()
     s_class.allocate()
-    run(name='runtest', runs=1, LOCAL=True, sensitivity_base=s_class, id_config=1, id_sim=1, dict_sim='test')
-    run_stats(name='runtest', runs=1, LOCAL=True, sensitivity_base=s_class, id_config=1, id_sim=1, dict_sim='test')
-    # pickle.load(open('C:/Users/WOstr/PycharmProjects/research_abm/abm_simulation/LOB/storage/'
-    #                              + 'run1' + '_statistics' + '.p', 'rb'))
-
-    # pickle.load(open('C:/Users/WOstr/PycharmProjects/research_abm/abm_simulation/LOB/storage/'
-    #                              + 'SPY' + '_statistics' + '.p', 'rb'))
-    #
-    # pickle.load(open('C:/Users/WOstr/PycharmProjects/research_abm/abm_simulation/LOB/storage/'
-    #                              + 'SPX' + '_statistics' + '.p', 'rb'))
+    run(name='runtest', runs=1, local_path=PATH, sensitivity_base=s_class, id_config=1, id_sim=1, dict_sim='test')
+    run_stats(name='runtest', runs=1, local_path=PATH, sensitivity_base=s_class, id_config=1, id_sim=1, dict_sim='test')

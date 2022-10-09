@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-# import plotly.io as pio
-# pio.renderers.default = "browser"
 
 
 def plot_wealth_share(wealth_share_normalized, drop_rows=0, title='wealth shares', show=False):

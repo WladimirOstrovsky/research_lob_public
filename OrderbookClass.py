@@ -2,6 +2,9 @@ import numpy as np
 
 
 class Orderbook:
+    """
+    Holding basic functionalities of a limit order book
+    """
 
     def __init__(self, periods, period_init, period_max):
         self.period_init = period_init

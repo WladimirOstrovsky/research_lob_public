@@ -30,12 +30,15 @@ DICT_SENSITIVITY = {
         'jump_adjustment': 0.0025,
     },
     6: {
-        'jump_adjustment': 0.0035,
+        'jump_adjustment': 0.0030,
     },
     7: {
-        'jump_adjustment': 0.0050,
+        'jump_adjustment': 0.0040,
     },
     8: {
-        'jump_adjustment': 0.0075,
-    }
+        'jump_adjustment': 0.0045,
+    },
+    9: {
+        'jump_adjustment': 0.0050,
+    },
 }

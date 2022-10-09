@@ -1,0 +1,14 @@
+certifi
+numpy
+packaging
+pandas
+patsy
+pip
+plotly
+pytz
+scipy
+setuptools
+statsmodels
+tenacity
+wheel
+wincertstore

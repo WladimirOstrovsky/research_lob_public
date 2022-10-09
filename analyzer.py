@@ -1,5 +1,5 @@
 """
-Functions to help analysing AgentClass and OrderbookClass
+Methods for analyzing AgentClass and OrderbookClass
 """
 
 import pandas as pd

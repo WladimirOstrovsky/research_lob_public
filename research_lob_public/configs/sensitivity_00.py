@@ -1,4 +1,6 @@
-# from OrderbookClass import Orderbook
+"""
+base config for simulations
+"""
 import numpy as np
 import plotly.io as pio
 pio.renderers.default = 'browser'
